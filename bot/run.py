@@ -42,9 +42,9 @@ def run():
     print("step2 passed")
 
     # Update the database with the current state
-    # update_database(current_state)
-    # update_database_with_branches()
-    # print("step3 passed")
+    update_database(current_state)
+    update_database_with_branches()
+    print("step3 passed")
 
 if __name__ == "__main__":
     run()

@@ -55,7 +55,7 @@ def fetch_github_branches_and_commits(git_access_token, main_repo, forks):
         }
     
     return repo_data
-def initialize_database_with_branches(repo_data, db_name='db/branch_state2.db'):
+def initialize_database_with_branches(repo_data, db_name='db/branch_state.db'):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     # Drop the table if it exists

@@ -19,7 +19,7 @@ def fetch_initial_state():
 
 def initialize_database():
     # Connect to the database (or create it if it doesn't exist)
-    conn = sqlite3.connect('db/state1.db')
+    conn = sqlite3.connect('db/state.db')
     c = conn.cursor()
 
     # Drop the table if it exists (useful for development/testing)

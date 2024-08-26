@@ -8,7 +8,7 @@ def run_bot(timestamp):
         time.sleep(timestamp)  # Delay for 5 minutes (300 seconds)
 
 if __name__ == "__main__":
-    # init_dataset()
-    # initialize_database()
+    init_dataset()
+    initialize_database()
     timestamp = 1000  # Delay in seconds
     run_bot(timestamp)
