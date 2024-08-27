@@ -1,46 +1,13 @@
 import sqlite3
-import json
 from github import Github
-from config import MAIN_REPO, FORKS, git_access_token
-def load_previous_state():
-    conn = sqlite3.connect('db/state.db')
-    c = conn.cursor()
-
-    # Ensure the table exists
-    c.execute('''CREATE TABLE IF NOT EXISTS state (data TEXT)''')
-
-    # Fetch the single item from the table
-    c.execute('SELECT data FROM state LIMIT 1')
-    row = c.fetchone()
-    conn.close()
-    # Return the previous state as a dictionary, or initialize if empty
-    if row and row[0]:
-        try:
-            return_cur = row[0]
-            return json.loads(return_cur)
-        except json.JSONDecodeError:
-            print("Error decoding JSON from database. Returning default state.")
-            return {"branches": [], "prs": []}
-    else:
-        return {"branches": [], "prs": []}
-
-def update_database(current_state):
-    conn = sqlite3.connect('db/state.db')
-    c = conn.cursor()
-
-    # Convert the current state to a JSON string
-    json_data = json.dumps(current_state)
-
-    # Clear the existing entry and insert the new state
-    c.execute('DELETE FROM state')
-    c.execute('INSERT INTO state (data) VALUES (?)', (json_data,))
-    conn.commit()
-    conn.close()
-
+import os
+from dotenv import load_dotenv
+import ast
 def fetch_github_branches_and_commits(git_access_token, main_repo, forks):
     g = Github(git_access_token)
     repo_data = {}
-    
+    if isinstance(forks, str):
+        forks = ast.literal_eval(forks)    
     # Add main repo and forks to the list
     repo_list = [main_repo] + forks
     
@@ -81,7 +48,11 @@ def initialize_database_with_branches(repo_data, db_name='db/branch_state.db'):
             ''', (repo_info['owner'], repo_info['name'], branch_name, commit_hash))
     conn.commit()
     conn.close()
+    
+def init_repo_fam():
 
-def update_database_with_branches():
-    repo_data = fetch_github_branches_and_commits(git_access_token, MAIN_REPO, FORKS)
+    load_dotenv()
+    # Fetch branches and commits from the main repo and specified forks
+    repo_data = fetch_github_branches_and_commits(os.getenv('GIT_ACCESS_TOKEN'), os.getenv('MAIN_REPO'), os.getenv('FORKS'))
+    # Initialize the database with the fetched branch data
     initialize_database_with_branches(repo_data)

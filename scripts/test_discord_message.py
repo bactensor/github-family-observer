@@ -46,7 +46,7 @@ def send_embed_via_webhook(webhook_url):
         print(f"Failed to send embed. Status code: {response.status_code}, Response: {response.text}")
 
 # Replace 'YOUR_WEBHOOK_URL' with your actual Discord webhook URL
-send_embed_via_webhook("https://discord.com/api/webhooks/1275490424420696124/O48oPQSk6-zMUFHRSIiTUo1xBwkGMn2GtQG4rTbpttfl-Zq3m0Iy7U1ASVID7z7hmC91")
+send_embed_via_webhook("")
 
 
 
@@ -91,7 +91,6 @@ def send_embed_with_link(webhook_url):
         print(f"Failed to send embed. Status code: {response.status_code}, Response: {response.text}")
 
 # Replace 'YOUR_WEBHOOK_URL' with your actual Discord webhook URL
-send_embed_with_link('https://discord.com/api/webhooks/1275490424420696124/O48oPQSk6-zMUFHRSIiTUo1xBwkGMn2GtQG4rTbpttfl-Zq3m0Iy7U1ASVID7z7hmC91')
+send_embed_with_link('')
 
-# Replace 'YOUR_WEBHOOK_URL' with your actual Discord webhook URL
-# send_embed_via_webhook("https://discord.com/api/webhooks/1275490424420696124/O48oPQSk6-zMUFHRSIiTUo1xBwkGMn2GtQG4rTbpttfl-Zq3m0Iy7U1ASVID7z7hmC91")
+

@@ -1,11 +1,16 @@
+
+# This script monitors GitHub repository branches and generates reports on their changes.
+# It compares the current state of branches with a previously stored state, identifies new, updated, deleted, and rebased branches,
+# and checks for commits merged into the main branch without an associated pull request.
+
 import os
 from github import Github
 import requests
 import json
 import sqlite3
 import re
-import config
-
+from dotenv import load_dotenv
+import ast
 # Wraps URLs in angle brackets to prevent Discord from auto-linking them.
 def wrap_urls_with_angle_brackets(text):
     url_pattern = r'(https?://\S+)'
@@ -34,8 +39,7 @@ def chunk_report(report):
     return chunks
 
 # Initializes the Github API client.
-GITHUB_TOKEN = config.git_access_token
-g = Github(GITHUB_TOKEN)
+g = Github(os.getenv('GIT_ACCESS_TOKEN'))
 
 # Fetches the current state of repositories (owner, name, branch, commit hash).
 def fetch_current_repo_state(repo_family):
@@ -53,7 +57,7 @@ def fetch_current_repo_state(repo_family):
     return current_state
 
 # Loads the previous state of branches from a SQLite database.
-def load_previous_state(db_name='db/branch_state.db'):
+def load_previous_state(db_name='db/repo_fam.db'):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     cursor.execute('''
@@ -254,29 +258,23 @@ def generate_report(new_branches, updated_branches, deleted_branches, rebased_br
             for i, commit in enumerate(branch["commits"]):
                 rebased_field["value"] += f"\n * [{commit['name']}]({commit['link']})" if i else f" * [{commit['name']}]({commit['link']})"
         fields.append(rebased_field)
-
     embed = {
         "title": "🌟 __ BRANCH REPORT __ 🌟",
         "description": "This is a report of branch movements.",
         "color": 642600,  # Hex color code in decimal
         "fields": fields,
-        "thumbnail": {
-            "url": "https://example.com/image.png"
-        },
     }
+    if not fields:
+        embed = {
+            "title": "🌟 __ BRANCH REPORT __ 🌟",
+            "description": "No changes in branches",
+            "color": 642600,  # Hex color code in decimal
+        }
 
     return embed
 
-# Posts the generated report to Discord via a webhook.
-# def post_to_discord(embed, webhook_url):
-#     data = {
-#         "embeds": [embed]
-#     }
-#     response = requests.post(webhook_url, data=json.dumps(data), headers={"Content-Type": "application/json"})
-#     # print(response.status_code, response.text)
-
 # Updates the SQLite database with the current state of branches.
-def update_database(current_state, db_name='branch_state.db'):
+def update_database(current_state, db_name='db/repo_fam.db'):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     
@@ -323,14 +321,22 @@ def generate_merged_commits_without_pr_report(merged_commits_without_pr):
             "url": "https://example.com/image.png"
         },
     }
+    if not merged_commits_without_pr:
+        embed = {
+            "title": "🔥 __ MERGED COMMITS WITHOUT PR __ 🔥",
+            "description": "No commits were merged without a pull request.",
+            "color": 12910592,  # Hex color code in decimal
+        }
 
     return embed
 
 # Main function to generate and post branch reports.
-def branch_report():
-    main_repo = config.MAIN_REPO
-    forks = config.FORKS
-    webhook = config.DISCORD_WEBHOOK_URL
+def branch_movements():
+    load_dotenv()
+    main_repo = os.getenv('MAIN_REPO')
+    forks = os.getenv('FORKS')
+    if isinstance(forks, str):
+        forks = ast.literal_eval(forks)
     repo_family = [main_repo] + forks
     current_state = fetch_current_repo_state(repo_family)
     previous_state = load_previous_state()
@@ -343,14 +349,8 @@ def branch_report():
         for commit in cur["commits"]
         if commit["sha"] not in merged_commits_without_pr_sha
     ]
+    report = generate_report(new_branches, updated_branches, deleted_branches, rebased_branches_result)
 
-    if new_branches or updated_branches or deleted_branches or rebased_branches:
-        report = generate_report(new_branches, updated_branches, deleted_branches, rebased_branches_result)
-        # post_to_discord(report, webhook)
-
-    if merged_without_pr:
-        merged_commits_without_pr_report = generate_merged_commits_without_pr_report(merged_without_pr)
-        # post_to_discord(merged_commits_without_pr_report, webhook)
+    merged_commits_without_pr_report = generate_merged_commits_without_pr_report(merged_without_pr)
+    # print(report, merged_commits_without_pr_report)
     return report, merged_commits_without_pr_report
-# Uncomment and implement if needed
-# def find_rebased_branches(main_repo, current_state, previous_state, merged_without_prs):

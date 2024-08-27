@@ -1,11 +1,12 @@
 import sqlite3
 from github import Github
 import json
-import config
+from dotenv import load_dotenv
 
-def fetch_initial_state():
+def fetch_initial_state_main_repo():
+    load_dotenv()
     # Initialize the GitHub client
-    access_token = config.git_access_token
+    access_token = git_access_token
     g = Github(access_token)
     main_repo = g.get_repo("Eros-Rama/bittensor")
 
@@ -17,7 +18,7 @@ def fetch_initial_state():
 
     return {"branches": branches, "prs": prs}
 
-def initialize_database():
+def initialize_main_repo():
     # Connect to the database (or create it if it doesn't exist)
     conn = sqlite3.connect('db/state.db')
     c = conn.cursor()
@@ -29,7 +30,7 @@ def initialize_database():
     c.execute('''CREATE TABLE state (data TEXT)''')
 
     # Fetch and insert the initial state
-    initial_state = fetch_initial_state()
+    initial_state = fetch_initial_state_main_repo()
     # initial_state = {"branches": ["feat/great", "feat-bro", "feat-older", "final", "folder", "master"], "prs": {"4": "open", "3": "closed", "2": "open", "1": "closed"}}
     json_data = json.dumps(initial_state)
 
@@ -40,5 +41,4 @@ def initialize_database():
     conn.commit()
     conn.close()
 
-if __name__ == "__main__":
-    initialize_database()
+

@@ -1,9 +1,10 @@
 from github import Github
-import config
+from dotenv import load_dotenv
 
 def get_commits_from_new_branch(new_branch_name):
+    load_dotenv()
     g = Github("")
-    main_repo = g.get_repo(config.MAIN_REPO)
+    main_repo = g.get_repo(MAIN_REPO)
 
     # Determine the default branch, typically "main" or "master"
     default_branch = main_repo.default_branch

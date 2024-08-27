@@ -1,6 +1,17 @@
+
+# This script generates a report on pull request activities in a GitHub repository.
+# It identifies open, merged, and closed-without-merging pull requests and formats a report for each category.
+#
+# Functions:
+# - add_indentation: Adds indentation to each line of a given text.
+# - fetch_pr_details: Retrieves details of a pull request, including its title, URL, author, and commits.
+# - format_report_prs: Formats a report for merged, unmerged, and open pull requests.
+# - find_open_merged_pr: Finds open, merged, and unmerged pull requests by comparing previous and current states.
+
 from github import Github
 import re
 import requests
+
 def add_indentation(text, spaces=4):
     indentation = ' ' * spaces
     return '\n'.join([indentation + line for line in text.split('\n')])
@@ -83,16 +94,20 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
         "description": "This is a report of pull request activities.",
         "color": 32255,  # Hex color code in decimal
         "fields": fields,
-        "thumbnail": {
-            "url": "https://example.com/image.png"
-        },
         # "footer": {
         #     "text": "This is a footer text"
         # }
     }
-
+    if not fields:
+        embed = {
+            "title": f"🚀 __ PULL REQUEST REPORT __ 🚀",
+            "description": "There is no new pull request activity",
+            "color": 32255,  # Hex color code in decimal
+            # "footer": {
+            #     "text": "This is a footer text"
+            # }
+        }
     return embed
-
 
 # def wrap_urls_with_angle_brackets(text):
 #     # Regular expression to match URLs
@@ -144,9 +159,6 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
 #     return chunks
 #     # Send each chunk as a separate message
 
-
-
-
 def find_open_merged_pr(previous_state, current_state, main_repo):
     merged_prs = []
     unmerged_prs = []
@@ -155,10 +167,7 @@ def find_open_merged_pr(previous_state, current_state, main_repo):
     # Extract previous and current PR states
     prev_prs = previous_state['prs']
     curr_prs = current_state['prs']
-    # print(prev_prs)
-    # print(curr_prs)
 
-    # Check for new PRs in the current state
     for pr_number, curr_state in curr_prs.items():
         if pr_number not in prev_prs:
             if curr_state == 'open':
@@ -182,19 +191,8 @@ def find_open_merged_pr(previous_state, current_state, main_repo):
                 merged_prs.append(pr_number)
             else:
                 unmerged_prs.append(pr_number)
-
-    # report_merged_prs = format_report_prs(merged_prs, main_repo)
-    # report_faild_prs = format_report_prs(unmerged_prs, main_repo)
-    # report_open_prs = format_report_prs(open_prs, main_repo)
     report_prs = format_report_prs(merged_prs, unmerged_prs, open_prs, main_repo)
 
-
-
-    # print(merged_prs)
-    # print(unmerged_prs)
-    # print(open_prs)
-
-    # exit(0)
     return report_prs
     
 
