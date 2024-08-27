@@ -22,7 +22,7 @@ load_dotenv()
 
 def fetch_initial_state_main_repo():
     # Initialize the GitHub client
-    access_token = os.getenv('git_access_token')
+    access_token = os.getenv('GIT_ACCESS_TOKEN')
     g = Github(access_token)
     main_repo = g.get_repo(f"{os.getenv('MAIN_REPO')}")
 
@@ -98,6 +98,7 @@ def fetch_github_branches_and_commits(git_access_token, main_repo, forks):
     
     for repo_info in repo_list:
         owner, name = repo_info.split('/')
+        # print(owner, name)
         repo = g.get_repo(f"{owner}/{name}")
         
         repo_data[repo_info] = {
