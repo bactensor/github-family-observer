@@ -26,6 +26,8 @@ def run_bot(timestamp):
         time.sleep(timestamp)  # Delay for the specified time in seconds
 
 if __name__ == "__main__":
+    start_time = time.time()
+    print(f"initializing started: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}")
     create_db_directory()  # Create a db directory in the home directory
     init_main_repo()  # Initialize the main repository in the database
     init_repo_fam()   # Initialize the repository family in the database

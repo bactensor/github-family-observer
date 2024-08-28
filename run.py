@@ -10,17 +10,21 @@ from observing.observer.ob_branch import branch_movements
 from github import Github
 from dotenv import load_dotenv
 import os
+import time
 def run():
     """
     Main function to orchestrate the process of fetching repository data,
     comparing states, generating reports, and posting them to Discord.
     """
 
+    start_time = time.time()
+    print(f"Start time: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}")
+
     load_dotenv()
 
     # Load the previous state from the database
     previous_state = load_previous_main_repo()
-
+    
     # Fetch current fork branches and main repository data
     access_token = os.getenv('GIT_ACCESS_TOKEN')
     g = Github(access_token)
@@ -53,6 +57,9 @@ def run():
     update_main_repo(current_state)
     update_database_with_branches()
     print("step3 passed")
+    end_time = time.time()
+    print(f"End time: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end_time))}")
+    print(f"Time consumed: {end_time - start_time:.2f} seconds")
 
 if __name__ == "__main__":
     run()
