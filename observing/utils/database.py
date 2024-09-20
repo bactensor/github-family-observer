@@ -19,6 +19,9 @@ import os
 import ast
 load_dotenv()
 
+base_directory = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+db_path = os.path.join(base_directory, 'db', 'main_repo.db')
+
 
 def fetch_initial_state_main_repo():
     # Initialize the GitHub client
@@ -36,7 +39,7 @@ def fetch_initial_state_main_repo():
 
 def init_main_repo():
 
-    conn = sqlite3.connect('db/main_repo.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     c.execute('DROP TABLE IF EXISTS state')
@@ -56,7 +59,7 @@ def init_main_repo():
     conn.close()
     
 def load_previous_main_repo():
-    conn = sqlite3.connect('db/main_repo.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     c.execute('''CREATE TABLE IF NOT EXISTS state (data TEXT)''')
@@ -76,7 +79,7 @@ def load_previous_main_repo():
         return {"branches": [], "prs": []}
 
 def update_main_repo(current_state):
-    conn = sqlite3.connect('db/main_repo.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     json_data = json.dumps(current_state)

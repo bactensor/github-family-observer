@@ -19,7 +19,7 @@ This project is designed to monitor the development progress of a repository by 
     MAIN_REPO = "opentensor/bittensor"
     FORKS = ["Eros-Rama/bittensor", ]
     DISCORD_WEBHOOK_URL = "your discord bot webhook url here"
-    git_access_token = "your git access token here"
+    GIT_ACCESS_TOKEN = "your git access token here"
 
 4. **Run the Main Script: Execute the main.py script to start the monitoring process:**:
     ```sh
@@ -105,4 +105,4 @@ project/
 
 ## Conclusion
 
-``` By following this documentation, you should be able to set up and run the project to monitor the development progress of a repository. Each script plays a crucial role in initializing the database, continuously updating the repository state, and generating reports. ```
+By following this documentation, you should be able to set up and run the project to monitor the development progress of a repository. Each script plays a crucial role in initializing the database, continuously updating the repository state, and generating reports.
