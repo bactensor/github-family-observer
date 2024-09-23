@@ -74,9 +74,9 @@ def load_previous_main_repo():
             return json.loads(return_cur)
         except json.JSONDecodeError:
             print("Error decoding JSON from database. Returning default state.")
-            return {"branches": [], "prs": []}
+            return {"branches": [], "prs": {}}
     else:
-        return {"branches": [], "prs": []}
+        return {"branches": [], "prs": {}}
 
 def update_main_repo(current_state):
     conn = sqlite3.connect(db_path)
@@ -101,7 +101,6 @@ def fetch_github_branches_and_commits(git_access_token, main_repo, forks):
     
     for repo_info in repo_list:
         owner, name = repo_info.split('/')
-        # print(owner, name)
         repo = g.get_repo(f"{owner}/{name}")
         
         repo_data[repo_info] = {

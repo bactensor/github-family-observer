@@ -39,16 +39,14 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
         }
         for pr_number in merged_prs:
             pr_details = fetch_pr_details(repo, pr_number)
-            # print(pr_details)
             if pr_details:
                 merged_field["value"] += f"\n- [{pr_details['title']}]({pr_details['url']}) by [{pr_details['author']}](https://github.com/{pr_details['author']})\n"
                 merged_field["value"] += "  Commits:\n"
                 for i, commit in enumerate(pr_details["commits"]):
                     if i:
                         merged_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
-                    else : 
+                    else: 
                         merged_field["value"] += f" * [{commit['name']}]({commit['link']})"
-        # merged_field["value"] = add_indentation(merged_field["value"])
         fields.append(merged_field)
 
     if unmerged_prs:
@@ -65,9 +63,8 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
                 for i, commit in enumerate(pr_details["commits"]):
                     if i:
                         unmerged_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
-                    else : 
+                    else: 
                         unmerged_field["value"] += f" * [{commit['name']}]({commit['link']})"
-        # unmerged_field["value"] = add_indentation(unmerged_field["value"])
         fields.append(unmerged_field)
 
     if open_prs:
@@ -84,9 +81,8 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
                 for i, commit in enumerate(pr_details["commits"]):
                     if i:
                         open_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
-                    else : 
+                    else: 
                         open_field["value"] += f" * [{commit['name']}]({commit['link']})"
-        # open_field["value"] = add_indentation(open_field["value"])
         fields.append(open_field)
 
     embed = {
@@ -94,63 +90,10 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
         "description": "This is a report of pull request activities.",
         "color": 32255,  # Hex color code in decimal
         "fields": fields,
-        # "footer": {
-        #     "text": "This is a footer text"
-        # }
     }
     if not fields:
         embed = None
     return embed
-
-# def wrap_urls_with_angle_brackets(text):
-#     # Regular expression to match URLs
-#     url_pattern = r'(https?://\S+)'
-    
-#     # Split the text by the arrow (:arrow_right:)
-#     parts = text.split(':arrow_right:')
-#     print(parts)
-#     # Wrap URLs in each part
-#     wrapped_parts = []
-#     for part in parts:
-#         wrapped_part = re.sub(url_pattern, r'<\1>', part.strip())
-#         wrapped_parts.append(wrapped_part)
-    
-#     # Join the parts back with the arrow
-#     return ' :arrow_right: '.join(wrapped_parts)
-
-# def chanking_report(report):
-#     # Discord message limit
-#     DISCORD_MESSAGE_LIMIT = 2000
-
-#     # Function to wrap URLs with angle brackets
-
-
-#     # Wrap URLs in the entire report
-#     report = wrap_urls_with_angle_brackets(report)
-
-#     # Split the report into chunks
-#     chunks = []
-#     lines = report.split('\n')
-#     current_chunk = ""
-
-#     for line in lines:
-#         # Check if adding the line would exceed the limit
-#         if len(current_chunk) + len(line) + 1 > DISCORD_MESSAGE_LIMIT:
-#             # If it would, save the current chunk and start a new one
-#             chunks.append(current_chunk)
-#             current_chunk = line
-#         else:
-#             # Otherwise, add the line to the current chunk
-#             if current_chunk:
-#                 current_chunk += "\n" + line
-#             else:
-#                 current_chunk = line
-
-#     # Don't forget to add the last chunk
-#     if current_chunk:
-#         chunks.append(current_chunk)
-#     return chunks
-#     # Send each chunk as a separate message
 
 def find_open_merged_pr(previous_state, current_state, main_repo):
     merged_prs = []
@@ -168,7 +111,7 @@ def find_open_merged_pr(previous_state, current_state, main_repo):
             elif curr_state == 'closed':
                 # Check if the PR is merged
                 pr = main_repo.get_pull(pr_number)
-                if pr.merged:  # Replace with actual check for merge status
+                if pr.merged:
                     merged_prs.append(pr_number)
                 else:
                     unmerged_prs.append(pr_number)
@@ -180,7 +123,7 @@ def find_open_merged_pr(previous_state, current_state, main_repo):
         if curr_state and prev_state == 'open' and curr_state == 'closed':
             # Check if the PR is merged
             pr = main_repo.get_pull(pr_number)
-            if pr.merged:  # Replace with actual check for merge status
+            if pr.merged:
                 merged_prs.append(pr_number)
             else:
                 unmerged_prs.append(pr_number)

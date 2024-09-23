@@ -44,7 +44,6 @@ def run():
     # Find open and merged pull requests
     report_prs = find_open_merged_pr(previous_state, current_state, main_repo)
     print("Merged PR report")
-    # print(report_prs)
     post_to_discord(report_prs, DISCORD_WEBHOOK_URL)
 
     # Generate branch reports

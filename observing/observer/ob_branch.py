@@ -71,11 +71,6 @@ def load_previous_state(db_name='db/repo_fam.db'):
     conn.close()
     return previous_state
 
-# Saves the current state of branches to a JSON file.
-def save_current_state(current_state):
-    with open("previous_state.json", "w") as f:
-        json.dump(current_state, f)
-
 # Converts a list of commit objects to a list of dictionaries with commit details.
 def convert_commits(paginated_commits):
     return [{"name": commit.commit.message.split('\n')[0], "link": commit.html_url, "sha": commit.sha} for commit in paginated_commits]
@@ -269,36 +264,10 @@ def generate_report(new_branches, updated_branches, deleted_branches, rebased_br
 
     return embed
 
-# Updates the SQLite database with the current state of branches.
-def update_database(current_state, db_name='db/repo_fam.db'):
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS branch_state (
-            repo_owner TEXT,
-            repo_name TEXT,
-            branch_name TEXT,
-            commit_hash TEXT,
-            PRIMARY KEY (repo_owner, repo_name, branch_name)
-        )
-    ''')
-    
-    for branch in current_state:
-        cursor.execute('''
-            INSERT INTO branch_state (repo_owner, repo_name, branch_name, commit_hash)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(repo_owner, repo_name, branch_name)
-            DO UPDATE SET commit_hash=excluded.commit_hash
-        ''', (branch['repo_owner'], branch['repo_name'], branch['branch_name'], branch['commit_hash']))
-    
-    conn.commit()
-    conn.close()
-
 # Generates a report for commits merged into the main branch without a pull request.
 def generate_merged_commits_without_pr_report(merged_commits_without_pr):
     field = {
-        "name": "The following commits were merged into the main branch of __bittensor__ repo without an associated pull request\n\n",
+        "name": "The following commits were merged into the main branch of the repo without an associated pull request\n\n",
         "value": "",
         "inline": False
     }
@@ -344,5 +313,4 @@ def branch_movements():
     report = generate_report(new_branches, updated_branches, deleted_branches, rebased_branches_result)
 
     merged_commits_without_pr_report = generate_merged_commits_without_pr_report(merged_without_pr)
-    # print(report, merged_commits_without_pr_report)
     return report, merged_commits_without_pr_report
