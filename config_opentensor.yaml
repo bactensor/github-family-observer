@@ -1,0 +1,7 @@
+DATABASE_DIR: "/home/michal/dev/work/Reef/tmp/github-family-observer/db-opentensor"
+MAIN_REPO: "opentensor/bittensor"
+FORKS:
+  - "coldint/bittensor"
+  - "backend-developers-ltd/bittensor"
+DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1286349460045041774/Pv3L5MShOCbx4uYn8aiD2EMOQf2c-G1MmrjkafRczGUlnbnONOVn6LP48rj--7ZTnz16"
+

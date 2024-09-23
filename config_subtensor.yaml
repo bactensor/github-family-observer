@@ -1,0 +1,7 @@
+DATABASE_DIR: "db-subtensor"
+MAIN_REPO: "opentensor/subtensor"
+FORKS:
+  - "mz-Datura/subtensor"
+  - "backend-developers-ltd/subtensor"
+DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1287149407736954992/Z4FhKvBtCYKtzqh6vepPUU8V-_bE24Kz6EOj8YyXNvN-Bs1YX9jF60mZC7bqxfhwkDsG"
+
