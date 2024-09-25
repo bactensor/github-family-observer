@@ -1,5 +1,5 @@
 # Project Documentation
-UPDATE ME
+
 ## Overview
 
 This project is designed to monitor the development progress of a repository by initializing the main repository and its family in a database, and continuously running a specified script at defined intervals. The project consists of several scripts that work together to achieve this goal.
