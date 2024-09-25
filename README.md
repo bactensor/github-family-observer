@@ -22,7 +22,7 @@ This project is designed to monitor the development progress of a repository by 
     GIT_ACCESS_TOKEN = "your git access token here"
     ```
 4. **Prepare the config file**:
-The script uses config.yaml file to get the configuration. Each run will store the current state of the repository in a SQLite database. Path to the database is specified in the config file. You can prepare your own config file or use the example one.
+The script uses config.yaml file to get the configuration. Each run will store the current state of the repository in a SQLite database. Path to the database is specified in the config file. You can prepare your own config file based on the example in the repository. Here is the structure of the config file:
 
     ```
     # config.yaml
