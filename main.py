@@ -31,5 +31,5 @@ if __name__ == "__main__":
     create_db_directory()  # Create a db directory in the home directory
     init_main_repo()  # Initialize the main repository in the database
     init_repo_fam()   # Initialize the repository family in the database
-    timestamp = 60  # Delay in seconds
+    timestamp = 3600  # Delay in seconds
     run_bot(timestamp)
