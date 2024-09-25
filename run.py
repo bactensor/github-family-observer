@@ -43,7 +43,7 @@ def run():
 
     # Find open and merged pull requests
     report_prs = find_open_merged_pr(previous_state, current_state, main_repo)
-    print("step1 passed")
+    print("Merged PR report")
     # print(report_prs)
     post_to_discord(report_prs, DISCORD_WEBHOOK_URL)
 
@@ -51,12 +51,12 @@ def run():
     branches_report, merged_branches_without_pr_report = branch_movements()
     post_to_discord(branches_report, DISCORD_WEBHOOK_URL)
     post_to_discord(merged_branches_without_pr_report, DISCORD_WEBHOOK_URL)
-    print("step2 passed")
+    print("Branch report")
 
     # Update the database with the current state
     update_main_repo(current_state)
     update_database_with_branches()
-    print("step3 passed")
+    print("Database update")
     end_time = time.time()
     print(f"End time: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end_time))}")
     print(f"Time consumed: {end_time - start_time:.2f} seconds")

@@ -17,7 +17,7 @@ This project is designed to monitor the development progress of a repository by 
 3. **Set Up Configuration: Update the .env file with your info**:
     ```sh
     MAIN_REPO = "opentensor/bittensor"
-    FORKS = ["Eros-Rama/bittensor", ]
+    FORKS = ["nesta-onur111/bittensor", ]
     DISCORD_WEBHOOK_URL = "your discord bot webhook url here"
     GIT_ACCESS_TOKEN = "your git access token here"
 

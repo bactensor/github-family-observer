@@ -54,6 +54,7 @@ def fetch_current_repo_state(repo_family):
                 "branch_name": branch.name,
                 "commit_hash": branch.commit.sha
             })
+    print(current_state)
     return current_state
 
 # Loads the previous state of branches from a SQLite database.
@@ -265,11 +266,7 @@ def generate_report(new_branches, updated_branches, deleted_branches, rebased_br
         "fields": fields,
     }
     if not fields:
-        embed = {
-            "title": "🌟 __ BRANCH REPORT __ 🌟",
-            "description": "No changes in branches",
-            "color": 642600,  # Hex color code in decimal
-        }
+        embed = None
 
     return embed
 
@@ -322,11 +319,7 @@ def generate_merged_commits_without_pr_report(merged_commits_without_pr):
         },
     }
     if not merged_commits_without_pr:
-        embed = {
-            "title": "🔥 __ MERGED COMMITS WITHOUT PR __ 🔥",
-            "description": "No commits were merged without a pull request.",
-            "color": 12910592,  # Hex color code in decimal
-        }
+        embed = None
 
     return embed
 
@@ -341,6 +334,7 @@ def branch_movements():
     current_state = fetch_current_repo_state(repo_family)
     previous_state = load_previous_state()
     new_branches, updated_branches, deleted_branches, rebased_branches = compare_states(current_state, previous_state)
+    print(current_state, previous_state)
     merged_without_pr = find_merged_commits_without_pr(main_repo, current_state, previous_state)
     
     merged_commits_without_pr_sha = [commit["sha"] for commit in merged_without_pr]
