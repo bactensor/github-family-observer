@@ -1,5 +1,5 @@
 # Project Documentation
-
+UPDATE ME
 ## Overview
 
 This project is designed to monitor the development progress of a repository by initializing the main repository and its family in a database, and continuously running a specified script at defined intervals. The project consists of several scripts that work together to achieve this goal.
@@ -10,22 +10,35 @@ This project is designed to monitor the development progress of a repository by 
    ```sh
    git clone https://github.com/bactensor/github-family-observer.git
    cd github-family-observer
-2. **Install Dependencies: Ensure you have Python and the required packages installed. You can install the dependencies using**:
+   ```
+
+2. **Install Dependencies**:
     ```sh
     pip install -r requirements.txt
+   ```
 
-3. **Set Up Configuration: Update the .env file with your info**:
+3. **Set Up the .env file**:
     ```sh
-    MAIN_REPO = "opentensor/bittensor"
-    FORKS = ["nesta-onur111/bittensor", ]
-    DISCORD_WEBHOOK_URL = "your discord bot webhook url here"
     GIT_ACCESS_TOKEN = "your git access token here"
+    ```
+4. **Prepare the config file**:
+The script uses config.yaml file to get the configuration. Each run will store the current state of the repository in a SQLite database. Path to the database is specified in the config file. You can prepare your own config file or use the example one.
 
-4. **Run the Main Script: Execute the main.py script to start the monitoring process:**:
+    ```
+    # config.yaml
+    DATABASE_DIR: "/path/to/your/db"
+    MAIN_REPO: "your main repo owner/name"
+    FORKS:
+      - "your fork owner/name"
+      - "your another fork owner/name"
+    DISCORD_WEBHOOK_URL: "your discord bot webhook url here"
+    ```
+
+5. **Run the Main Script**:
+Run the script providing the config file and (optionally) wait interval between consecutive runs (in seconds).
     ```sh
-    python main.py
-
-Run the Main Script: Execute the main.py script to start the monitoring process:
+    python main.py --interval 3600 config.yaml
+    ```
 
 ## Target
 The primary target of this project is to monitor the development progress of a repository by:
@@ -73,15 +86,6 @@ This script initializes the database with the initial state of the main reposito
 * Usage:
     * Run this script to generate a report on the current state of branches and pull requests.
 
-### `.env`
-
-This script provides configuration settings such as the GitHub access token.
-
-* Variables:
-    * `git_access_token`: Your GitHub access token.
-* Usage:
-    * Update this file with your GitHub access token before running the other scripts.
-
 ## Example Directory Structure
 
 ```
@@ -99,9 +103,9 @@ project/
     │   └── ob_prs.db
     │
     │   
+    ├── config.yaml
     └── run.py  # Script that is run continuously by main.py
 ```
-
 
 ## Conclusion
 

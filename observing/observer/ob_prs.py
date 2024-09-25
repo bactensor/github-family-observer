@@ -8,9 +8,6 @@
 # - format_report_prs: Formats a report for merged, unmerged, and open pull requests.
 # - find_open_merged_pr: Finds open, merged, and unmerged pull requests by comparing previous and current states.
 
-from github import Github
-import re
-import requests
 
 def add_indentation(text, spaces=4):
     indentation = ' ' * spaces
@@ -86,7 +83,7 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
         fields.append(open_field)
 
     embed = {
-        "title": f"🚀 __ PULL REQUEST REPORT __ 🚀",
+        "title": "🚀 __ PULL REQUEST REPORT __ 🚀",
         "description": "This is a report of pull request activities.",
         "color": 32255,  # Hex color code in decimal
         "fields": fields,
