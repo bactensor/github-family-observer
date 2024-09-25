@@ -4,3 +4,7 @@ path/to/venv/
 */*/__pycache__/
 .env
 /venv/
+
+# main_repo.db and repo_fam.db are created by database.py to store the state of the repository
+main_repo.db
+repo_fam.db
