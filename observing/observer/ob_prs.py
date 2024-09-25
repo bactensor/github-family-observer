@@ -99,14 +99,7 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
         # }
     }
     if not fields:
-        embed = {
-            "title": f"🚀 __ PULL REQUEST REPORT __ 🚀",
-            "description": "There is no new pull request activity",
-            "color": 32255,  # Hex color code in decimal
-            # "footer": {
-            #     "text": "This is a footer text"
-            # }
-        }
+        embed = None
     return embed
 
 # def wrap_urls_with_angle_brackets(text):

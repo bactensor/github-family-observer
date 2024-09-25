@@ -265,11 +265,7 @@ def generate_report(new_branches, updated_branches, deleted_branches, rebased_br
         "fields": fields,
     }
     if not fields:
-        embed = {
-            "title": "🌟 __ BRANCH REPORT __ 🌟",
-            "description": "No changes in branches",
-            "color": 642600,  # Hex color code in decimal
-        }
+        embed = None
 
     return embed
 
@@ -322,11 +318,7 @@ def generate_merged_commits_without_pr_report(merged_commits_without_pr):
         },
     }
     if not merged_commits_without_pr:
-        embed = {
-            "title": "🔥 __ MERGED COMMITS WITHOUT PR __ 🔥",
-            "description": "No commits were merged without a pull request.",
-            "color": 12910592,  # Hex color code in decimal
-        }
+        embed = None
 
     return embed
 
