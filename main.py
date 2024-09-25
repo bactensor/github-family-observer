@@ -10,6 +10,7 @@ from observing.utils.database import init_main_repo, init_repo_fam
 import os
 import argparse
 import yaml
+import sys
 from dotenv import load_dotenv
 
 def create_db_directory(db_path):
@@ -23,7 +24,7 @@ def create_db_directory(db_path):
 def run_bot(timestamp, config_file):
     """Runs the 'run.py' script continuously with a delay specified by timestamp."""
     while True:
-        subprocess.run(['python', 'run.py', config_file])  # Pass the config file to run.py
+        subprocess.run([sys.executable, 'run.py', config_file])   # Pass the config file to run.py
         print(f"run.py finished, sleeping for {timestamp} seconds")
         time.sleep(timestamp)  # Delay for the specified time in seconds
 
