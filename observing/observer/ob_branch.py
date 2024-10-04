@@ -6,10 +6,8 @@
 import os
 from github import Github
 import requests
-import json
 import sqlite3
 import re
-from dotenv import load_dotenv
 import ast
 # Wraps URLs in angle brackets to prevent Discord from auto-linking them.
 def wrap_urls_with_angle_brackets(text):
@@ -38,14 +36,11 @@ def chunk_report(report):
     
     return chunks
 
-# Initializes the Github API client.
-g = Github(os.getenv('GIT_ACCESS_TOKEN'))
-
 # Fetches the current state of repositories (owner, name, branch, commit hash).
-def fetch_current_repo_state(repo_family):
+def fetch_current_repo_state(repo_family, github_client):
     current_state = []
     for repo_full_name in repo_family:
-        repo = g.get_repo(repo_full_name)
+        repo = github_client.get_repo(repo_full_name)
         branches = repo.get_branches()
         for branch in branches:
             current_state.append({
@@ -57,8 +52,8 @@ def fetch_current_repo_state(repo_family):
     return current_state
 
 # Loads the previous state of branches from a SQLite database.
-def load_previous_state(db_name='db/repo_fam.db'):
-    conn = sqlite3.connect(db_name)
+def load_previous_state(db_path):
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('''
         SELECT repo_owner, repo_name, branch_name, commit_hash
@@ -71,17 +66,12 @@ def load_previous_state(db_name='db/repo_fam.db'):
     conn.close()
     return previous_state
 
-# Saves the current state of branches to a JSON file.
-def save_current_state(current_state):
-    with open("previous_state.json", "w") as f:
-        json.dump(current_state, f)
-
 # Converts a list of commit objects to a list of dictionaries with commit details.
 def convert_commits(paginated_commits):
     return [{"name": commit.commit.message.split('\n')[0], "link": commit.html_url, "sha": commit.sha} for commit in paginated_commits]
 
 # Compares the current and previous states of branches to identify changes.
-def compare_states(current_state, previous_state):
+def compare_states(current_state, previous_state, github_client):
     new_branches = []
     updated_branches = []
     deleted_branches = []
@@ -90,7 +80,7 @@ def compare_states(current_state, previous_state):
     
     for current_branch in current_state:
         repo_full_name = f"{current_branch['repo_owner']}/{current_branch['repo_name']}"
-        repo = g.get_repo(repo_full_name)
+        repo = github_client.get_repo(repo_full_name)
         
         previous_branch = next((b for b in previous_state 
                                 if b["repo_owner"] == current_branch["repo_owner"] 
@@ -141,24 +131,24 @@ def is_rebased(comparison):
     return base_commit_sha not in comparison_commit_shas
 
 # Finds commits merged into the main branch without an associated pull request.
-def find_merged_commits_without_pr(main_repo, current_state, previous_state):
+def find_merged_commits_without_pr(main_repo_name, current_state, previous_state, github_client):
     merged_without_pr = []
 
-    repo = g.get_repo(main_repo)
+    repo = github_client.get_repo(main_repo_name)
     main_branch_name = repo.default_branch
 
-    current_main_branch = next((b for b in current_state if b["repo_owner"] == main_repo.split('/')[0] and 
-                                b["repo_name"] == main_repo.split('/')[1] and 
+    current_main_branch = next((b for b in current_state if b["repo_owner"] == main_repo_name.split('/')[0] and 
+                                b["repo_name"] == main_repo_name.split('/')[1] and 
                                 b["branch_name"] == main_branch_name), None)
 
-    previous_main_branch = next((b for b in previous_state if b["repo_owner"] == main_repo.split('/')[0] and 
-                                 b["repo_name"] == main_repo.split('/')[1] and 
+    previous_main_branch = next((b for b in previous_state if b["repo_owner"] == main_repo_name.split('/')[0] and 
+                                 b["repo_name"] == main_repo_name.split('/')[1] and 
                                  b["branch_name"] == main_branch_name), None)
 
     previous_commit_hash = previous_main_branch["commit_hash"] if previous_main_branch else None
-    new_commits = fetch_commits(main_repo, main_branch_name, previous_commit_hash)
+    new_commits = fetch_commits(main_repo_name, main_branch_name, previous_commit_hash, github_client)
     
-    pulls = repo.get_pulls(state='closed', base=main_branch_name)
+    pulls = repo.get_pulls(state="closed", base=main_branch_name)
 
     pr_commit_shas = set()
     for pr in pulls:
@@ -173,8 +163,8 @@ def find_merged_commits_without_pr(main_repo, current_state, previous_state):
     return merged_without_pr
 
 # Fetches commits from a specified branch, optionally since a specific commit.
-def fetch_commits(repo_full_name, branch_name, since_commit=None):
-    repo = g.get_repo(repo_full_name)
+def fetch_commits(repo_full_name, branch_name, since_commit, github_client):
+    repo = github_client.get_repo(repo_full_name)
     commits = []
     for commit in repo.get_commits(sha=branch_name):
         if since_commit and commit.sha == since_commit:
@@ -269,36 +259,10 @@ def generate_report(new_branches, updated_branches, deleted_branches, rebased_br
 
     return embed
 
-# Updates the SQLite database with the current state of branches.
-def update_database(current_state, db_name='db/repo_fam.db'):
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS branch_state (
-            repo_owner TEXT,
-            repo_name TEXT,
-            branch_name TEXT,
-            commit_hash TEXT,
-            PRIMARY KEY (repo_owner, repo_name, branch_name)
-        )
-    ''')
-    
-    for branch in current_state:
-        cursor.execute('''
-            INSERT INTO branch_state (repo_owner, repo_name, branch_name, commit_hash)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(repo_owner, repo_name, branch_name)
-            DO UPDATE SET commit_hash=excluded.commit_hash
-        ''', (branch['repo_owner'], branch['repo_name'], branch['branch_name'], branch['commit_hash']))
-    
-    conn.commit()
-    conn.close()
-
 # Generates a report for commits merged into the main branch without a pull request.
 def generate_merged_commits_without_pr_report(merged_commits_without_pr):
     field = {
-        "name": "The following commits were merged into the main branch of __bittensor__ repo without an associated pull request\n\n",
+        "name": "The following commits were merged into the main branch of the repo without an associated pull request\n\n",
         "value": "",
         "inline": False
     }
@@ -323,18 +287,21 @@ def generate_merged_commits_without_pr_report(merged_commits_without_pr):
     return embed
 
 # Main function to generate and post branch reports.
-def branch_movements():
-    load_dotenv()
-    main_repo = os.getenv('MAIN_REPO')
-    forks = os.getenv('FORKS')
+def branch_movements(db_dir, git_access_token, main_repo_name, forks):
+
+    github_client = Github(git_access_token)
     if isinstance(forks, str):
         forks = ast.literal_eval(forks)
-    repo_family = [main_repo] + forks
-    current_state = fetch_current_repo_state(repo_family)
-    previous_state = load_previous_state()
-    new_branches, updated_branches, deleted_branches, rebased_branches = compare_states(current_state, previous_state)
-    merged_without_pr = find_merged_commits_without_pr(main_repo, current_state, previous_state)
-    
+    repo_family = [main_repo_name] + forks
+
+    db_path = os.path.join(db_dir, 'repo_fam.db')
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+
+    current_state = fetch_current_repo_state(repo_family, github_client)
+    previous_state = load_previous_state(db_path)
+    new_branches, updated_branches, deleted_branches, rebased_branches = compare_states(current_state, previous_state, github_client)
+    merged_without_pr = find_merged_commits_without_pr(main_repo_name, current_state, previous_state, github_client)
+
     merged_commits_without_pr_sha = [commit["sha"] for commit in merged_without_pr]
     rebased_branches_result = [
         cur for cur in rebased_branches
@@ -344,5 +311,4 @@ def branch_movements():
     report = generate_report(new_branches, updated_branches, deleted_branches, rebased_branches_result)
 
     merged_commits_without_pr_report = generate_merged_commits_without_pr_report(merged_without_pr)
-    # print(report, merged_commits_without_pr_report)
     return report, merged_commits_without_pr_report

@@ -19,15 +19,11 @@ import os
 import ast
 load_dotenv()
 
-base_directory = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-db_path = os.path.join(base_directory, 'db', 'main_repo.db')
 
+def fetch_initial_state_main_repo(git_access_token, main_repo_name):
 
-def fetch_initial_state_main_repo():
-    # Initialize the GitHub client
-    access_token = os.getenv('GIT_ACCESS_TOKEN')
-    g = Github(access_token)
-    main_repo = g.get_repo(f"{os.getenv('MAIN_REPO')}")
+    github_client = Github(git_access_token)
+    main_repo = github_client.get_repo(main_repo_name)
 
     # Fetch branches
     branches = [branch.name for branch in main_repo.get_branches()]
@@ -37,8 +33,9 @@ def fetch_initial_state_main_repo():
 
     return {"branches": branches, "prs": prs}
 
-def init_main_repo():
+def init_main_repo(db_dir, git_access_token, main_repo_name):
 
+    db_path = os.path.join(db_dir, 'main_repo.db')
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
@@ -47,8 +44,7 @@ def init_main_repo():
     c.execute('''CREATE TABLE state (data TEXT)''')
 
     # Fetch and insert the initial state
-    initial_state = fetch_initial_state_main_repo()
-    # initial_state = {"branches": ["feat/great", "feat-bro", "feat-older", "final", "folder", "master"], "prs": {"4": "open", "3": "closed", "2": "open", "1": "closed"}}
+    initial_state = fetch_initial_state_main_repo(git_access_token, main_repo_name)
     json_data = json.dumps(initial_state)
 
     # Insert the JSON data into the table
@@ -58,7 +54,9 @@ def init_main_repo():
     conn.commit()
     conn.close()
     
-def load_previous_main_repo():
+def load_previous_main_repo(db_dir):
+
+    db_path = os.path.join(db_dir, 'main_repo.db')
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
@@ -74,11 +72,13 @@ def load_previous_main_repo():
             return json.loads(return_cur)
         except json.JSONDecodeError:
             print("Error decoding JSON from database. Returning default state.")
-            return {"branches": [], "prs": []}
+            return {"branches": [], "prs": {}}
     else:
-        return {"branches": [], "prs": []}
+        return {"branches": [], "prs": {}}
 
-def update_main_repo(current_state):
+def update_main_repo(db_dir, current_state):
+
+    db_path = os.path.join(db_dir, 'main_repo.db')
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
@@ -90,19 +90,18 @@ def update_main_repo(current_state):
     conn.commit()
     conn.close()
 
-def fetch_github_branches_and_commits(git_access_token, main_repo, forks):
-    g = Github(git_access_token)
+def fetch_github_branches_and_commits(git_access_token, main_repo_name, forks):
+    github_client = Github(git_access_token)
     repo_data = {}
     
     # Add main repo and forks to the list
     if isinstance(forks, str):
         forks = ast.literal_eval(forks)
-    repo_list = [main_repo] + forks
+    repo_list = [main_repo_name] + forks
     
     for repo_info in repo_list:
         owner, name = repo_info.split('/')
-        # print(owner, name)
-        repo = g.get_repo(f"{owner}/{name}")
+        repo = github_client.get_repo(f"{owner}/{name}")
         
         repo_data[repo_info] = {
             "owner": owner,
@@ -112,12 +111,13 @@ def fetch_github_branches_and_commits(git_access_token, main_repo, forks):
     
     return repo_data
 
-def update_database_with_branches():
-    repo_data = fetch_github_branches_and_commits(os.getenv('GIT_ACCESS_TOKEN'), os.getenv('MAIN_REPO'), os.getenv('FORKS'))
-    initialize_database_with_branches(repo_data)
+def update_database_with_branches(db_dir, git_access_token, main_repo_name, forks):
+    repo_data = fetch_github_branches_and_commits(git_access_token, main_repo_name, forks)
+    initialize_database_with_branches(db_dir, repo_data)
 
-def initialize_database_with_branches(repo_data, db_name='db/repo_fam.db'):
-    conn = sqlite3.connect(db_name)
+def initialize_database_with_branches(db_dir, repo_data):
+    db_path = os.path.join(db_dir, 'repo_fam.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('DROP TABLE IF EXISTS branch_state')
     cursor.execute('''
@@ -129,6 +129,7 @@ def initialize_database_with_branches(repo_data, db_name='db/repo_fam.db'):
             PRIMARY KEY (repo_owner, repo_name, branch_name)
         )
     ''')
+
     # Insert the branch data into the table
     for repo_full_name, repo_info in repo_data.items():
         for branch_name, commit_hash in repo_info['branches'].items():
@@ -138,11 +139,12 @@ def initialize_database_with_branches(repo_data, db_name='db/repo_fam.db'):
                 ON CONFLICT(repo_owner, repo_name, branch_name) 
                 DO UPDATE SET commit_hash=excluded.commit_hash
             ''', (repo_info['owner'], repo_info['name'], branch_name, commit_hash))
+
     conn.commit()
     conn.close()
     
-def init_repo_fam():
+def init_repo_fam(db_dir, git_access_token, main_repo_name, forks):
     # Fetch branches and commits from the main repo and specified forks
-    repo_data = fetch_github_branches_and_commits(os.getenv('GIT_ACCESS_TOKEN'), os.getenv('MAIN_REPO'), os.getenv('FORKS'))
+    repo_data = fetch_github_branches_and_commits(git_access_token, main_repo_name, forks)
     # Initialize the database with the fetched branch data
-    initialize_database_with_branches(repo_data)
+    initialize_database_with_branches(db_dir, repo_data)

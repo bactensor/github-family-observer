@@ -1,0 +1,15 @@
+# Example of config.yaml file
+
+# Path to the folder where repository database files are stored
+DATABASE_DIR: "db"
+
+# GitHub repository to monitor (use the full repository name in the format 'owner/repo')
+MAIN_REPO: "owner/repository_name"
+
+# List of fork repositories to monitor (in the format 'owner/repo')
+FORKS:
+  - "fork_owner1/fork_repo1"
+  - "fork_owner2/fork_repo2"
+
+# Discord webhook URL where reports will be posted
+DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/your_webhook_id/your_webhook_token"
