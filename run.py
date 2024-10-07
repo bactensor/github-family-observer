@@ -58,7 +58,7 @@ def run(config):
     branches_report, merged_branches_without_pr_report = branch_movements(db_dir, access_token, main_repo_name, forks)
     post_to_discord(branches_report, discord_webhook_url)
     post_to_discord(merged_branches_without_pr_report, discord_webhook_url)
-    print("step2 passed")
+    print("Branch report")
 
     # Update the database with the current state
     update_main_repo(db_dir, current_state)
