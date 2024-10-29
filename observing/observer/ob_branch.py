@@ -249,8 +249,7 @@ def generate_report(new_branches, updated_branches, deleted_branches, rebased_br
                 rebased_field["value"] += f"\n * [{commit['name']}]({commit['link']})" if i else f" * [{commit['name']}]({commit['link']})"
         fields.append(rebased_field)
     embed = {
-        "title": "🌟 __ BRANCH REPORT __ 🌟",
-        "description": "This is a report of branch movements.",
+        "title": "🌟 BRANCH REPORT 🌟",
         "color": 642600,  # Hex color code in decimal
         "fields": fields,
     }
