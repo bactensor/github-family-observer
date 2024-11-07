@@ -101,19 +101,20 @@ def compare_states(current_state, previous_state, github_client):
         elif current_branch["commit_hash"] != previous_branch["commit_hash"]:
             comparison = repo.compare(previous_branch["commit_hash"], current_branch["commit_hash"])
             if comparison.commits:
-                updated_branches.append({
-                    "repo_owner": current_branch["repo_owner"],
-                    "repo_name": current_branch["repo_name"],
-                    "branch_name": current_branch["branch_name"],
-                    "current_commit_hash": current_branch["commit_hash"],
-                    "previous_commit_hash": previous_branch["commit_hash"],
-                    "commits": convert_commits(comparison.commits)
-                })
                 if is_rebased(comparison):
                     rebased_branches.append({
                         "repo_owner": current_branch["repo_owner"],
                         "repo_name": current_branch["repo_name"],
                         "branch_name": current_branch["branch_name"],
+                        "commits": convert_commits(comparison.commits)
+                    })
+                else:
+                    updated_branches.append({
+                        "repo_owner": current_branch["repo_owner"],
+                        "repo_name": current_branch["repo_name"],
+                        "branch_name": current_branch["branch_name"],
+                        "current_commit_hash": current_branch["commit_hash"],
+                        "previous_commit_hash": previous_branch["commit_hash"],
                         "commits": convert_commits(comparison.commits)
                     })
     
