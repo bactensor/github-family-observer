@@ -83,8 +83,7 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
         fields.append(open_field)
 
     embed = {
-        "title": "🚀 __ PULL REQUEST REPORT __ 🚀",
-        "description": "This is a report of pull request activities.",
+        "title": "🚀 PULL REQUEST REPORT 🚀",
         "color": 32255,  # Hex color code in decimal
         "fields": fields,
     }
