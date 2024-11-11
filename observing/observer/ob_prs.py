@@ -25,12 +25,12 @@ def fetch_pr_details(repo, pr_number):
         'commits': commit_details
     }
 
-def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
+def format_report_prs(merged_prs, unmerged_prs, open_prs, reopened_prs, repo):
     fields = []
 
     if merged_prs:
         merged_field = {
-            "name": "\n\n🟣 **Merged Pull Requests** 🟣\n\n",
+            "name": "\n\n🎉 **Merged Pull Requests** 🎉\n\n",
             "value": "",
             "inline": False
         }
@@ -48,7 +48,7 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
 
     if unmerged_prs:
         unmerged_field = {
-            "name": "\n\n🔴 **Closed without merging** 🔴\n\n",
+            "name": "\n\n🛑 **Closed without merging** 🛑\n\n",
             "value": "",
             "inline": False
         }
@@ -64,9 +64,27 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, repo):
                         unmerged_field["value"] += f" * [{commit['name']}]({commit['link']})"
         fields.append(unmerged_field)
 
+    if reopened_prs:
+        reopened_field = {
+            "name": "\n\n🚪 **Reopened Pull Requests** 🚪\n\n",
+            "value": "",
+            "inline": False
+        }
+        for pr_number in reopened_prs:
+            pr_details = fetch_pr_details(repo, pr_number)
+            if pr_details:
+                reopened_field["value"] += f"\n- [{pr_details['title']}]({pr_details['url']}) by [{pr_details['author']}](https://github.com/{pr_details['author']})\n"
+                reopened_field["value"] += "  Commits:\n"
+                for i, commit in enumerate(pr_details["commits"]):
+                    if i:
+                        reopened_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
+                    else: 
+                        reopened_field["value"] += f" * [{commit['name']}]({commit['link']})"
+        fields.append(reopened_field)
+    
     if open_prs:
         open_field = {
-            "name": "\n\n🟢 **Opened Pull Requests** 🟢\n\n",
+            "name": "\n\n🌟 **Opened Pull Requests** 🌟\n\n",
             "value": "",
             "inline": False
         }
@@ -95,6 +113,7 @@ def find_open_merged_pr(previous_state, current_state, main_repo):
     merged_prs = []
     unmerged_prs = []
     open_prs = []
+    reopened_prs = []
 
     # Extract previous and current PR states
     prev_prs = previous_state['prs']
@@ -111,6 +130,9 @@ def find_open_merged_pr(previous_state, current_state, main_repo):
                     merged_prs.append(pr_number)
                 else:
                     unmerged_prs.append(pr_number)
+        elif prev_prs[pr_number] == 'closed' and curr_state == 'open':
+            # PR was reopened
+            reopened_prs.append(pr_number)
 
     # Check existing PRs for state changes
     for pr_number, prev_state in prev_prs.items():
@@ -123,8 +145,6 @@ def find_open_merged_pr(previous_state, current_state, main_repo):
                 merged_prs.append(pr_number)
             else:
                 unmerged_prs.append(pr_number)
-    report_prs = format_report_prs(merged_prs, unmerged_prs, open_prs, main_repo)
 
+    report_prs = format_report_prs(merged_prs, unmerged_prs, open_prs, reopened_prs, main_repo)
     return report_prs
-    
-
