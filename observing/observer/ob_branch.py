@@ -71,12 +71,25 @@ def convert_commits(paginated_commits):
     return [{"name": commit.commit.message.split('\n')[0], "link": commit.html_url, "sha": commit.sha} for commit in paginated_commits]
 
 # Compares the current and previous states of branches to identify changes.
+# Forks may have same branches, so we avoid duplicates in the report by tracking processed changes.
 def compare_states(current_state, previous_state, github_client):
     new_branches = []
     updated_branches = []
     deleted_branches = []
     rebased_branches = []
-    current_branch_keys = {(b['repo_owner'], b['repo_name'], b['branch_name']) for b in current_state}
+    
+    # tracking different types of changes with appropriate keys
+    processed_additions = set()  # (branch_name, commit_hash)
+    processed_updates = set()       # (branch_name, previous_hash)
+    processed_deletions = set()     # (branch_name)
+
+    # Debug: Print initial states
+    print("Current state branches:", [(b['branch_name'], b['commit_hash']) for b in current_state])
+    print("Previous state branches:", [(b['branch_name'], b['commit_hash']) for b in previous_state])
+
+    
+    current_branch_keys = {(b['repo_owner'], b['repo_name'], b['branch_name']) 
+                          for b in current_state}
     
     for current_branch in current_state:
         repo_full_name = f"{current_branch['repo_owner']}/{current_branch['repo_name']}"
@@ -88,40 +101,73 @@ def compare_states(current_state, previous_state, github_client):
                                 and b["branch_name"] == current_branch["branch_name"]), None)
         
         if previous_branch is None:
-            default_branch = repo.default_branch
-            comparison = repo.compare(default_branch, current_branch["branch_name"])
-            if comparison.commits:
-                new_branches.append({
-                    "repo_owner": current_branch["repo_owner"],
-                    "repo_name": current_branch["repo_name"],
-                    "branch_name": current_branch["branch_name"],
-                    "commit_hash": current_branch["commit_hash"],
-                    "commits": convert_commits(comparison.commits)
-                })
+            new_branch_key = (current_branch["branch_name"], 
+                            current_branch["commit_hash"])
+            
+            if new_branch_key not in processed_additions:
+                default_branch = repo.default_branch
+                comparison = repo.compare(default_branch, current_branch["branch_name"])
+                if comparison.commits:
+                    new_branches.append({
+                        "repo_owner": current_branch["repo_owner"],
+                        "repo_name": current_branch["repo_name"],
+                        "branch_name": current_branch["branch_name"],
+                        "commit_hash": current_branch["commit_hash"],
+                        "commits": convert_commits(comparison.commits)
+                    })
+                    processed_additions.add(new_branch_key)
+                
         elif current_branch["commit_hash"] != previous_branch["commit_hash"]:
-            comparison = repo.compare(previous_branch["commit_hash"], current_branch["commit_hash"])
-            if comparison.commits:
-                if is_rebased(comparison):
-                    rebased_branches.append({
-                        "repo_owner": current_branch["repo_owner"],
-                        "repo_name": current_branch["repo_name"],
-                        "branch_name": current_branch["branch_name"],
-                        "commits": convert_commits(comparison.commits)
-                    })
-                else:
-                    updated_branches.append({
-                        "repo_owner": current_branch["repo_owner"],
-                        "repo_name": current_branch["repo_name"],
-                        "branch_name": current_branch["branch_name"],
-                        "current_commit_hash": current_branch["commit_hash"],
-                        "previous_commit_hash": previous_branch["commit_hash"],
-                        "commits": convert_commits(comparison.commits)
-                    })
+            update_key = (current_branch["branch_name"], 
+                         previous_branch["commit_hash"]) 
+
+            # Debug: Print before processing update
+            print(f"\nProcessing branch: {current_branch['branch_name']}")
+            print(f"Update key: {update_key}")
+            print(f"Already processed updates: {processed_updates}")
+
+
+            if update_key not in processed_updates:
+                comparison = repo.compare(previous_branch["commit_hash"], 
+                                        current_branch["commit_hash"])
+                if comparison.commits:
+                    if is_rebased(comparison):
+                        # Debug: Print rebase detection
+                        print(f"Detected rebase for {current_branch['branch_name']}")
+                        print(f"Commits: {[c['name'] for c in convert_commits(comparison.commits)]}")
+
+                        rebased_branches.append({
+                            "repo_owner": current_branch["repo_owner"],
+                            "repo_name": current_branch["repo_name"],
+                            "branch_name": current_branch["branch_name"],
+                            "commits": convert_commits(comparison.commits)
+                        })
+                    else:
+                        updated_branches.append({
+                            "repo_owner": current_branch["repo_owner"],
+                            "repo_name": current_branch["repo_name"],
+                            "branch_name": current_branch["branch_name"],
+                            "current_commit_hash": current_branch["commit_hash"],
+                            "previous_commit_hash": previous_branch["commit_hash"],
+                            "commits": convert_commits(comparison.commits)
+                        })
+                    processed_updates.add(update_key)
     
     for previous_branch in previous_state:
-        if (previous_branch['repo_owner'], previous_branch['repo_name'], previous_branch['branch_name']) not in current_branch_keys:
+        deletion_key = previous_branch['branch_name']
+        if ((previous_branch['repo_owner'], 
+             previous_branch['repo_name'], 
+             previous_branch['branch_name']) not in current_branch_keys
+            and deletion_key not in processed_deletions):
             deleted_branches.append(previous_branch)
-    
+            processed_deletions.add(deletion_key)
+
+    # Debug: Print final results
+    print("\nFinal processed updates:", processed_updates)
+    print("Number of rebased branches:", len(rebased_branches))
+    for rb in rebased_branches:
+        print(f"Rebased branch: {rb['branch_name']} with {len(rb['commits'])} commits")
+
     return new_branches, updated_branches, deleted_branches, rebased_branches
 
 # Determines if a branch has been rebased by checking the base commit SHA.
