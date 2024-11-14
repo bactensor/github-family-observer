@@ -83,11 +83,6 @@ def compare_states(current_state, previous_state, github_client):
     processed_updates = set()       # (branch_name, previous_hash)
     processed_deletions = set()     # (branch_name)
 
-    # Debug: Print initial states
-    print("Current state branches:", [(b['branch_name'], b['commit_hash']) for b in current_state])
-    print("Previous state branches:", [(b['branch_name'], b['commit_hash']) for b in previous_state])
-
-    
     current_branch_keys = {(b['repo_owner'], b['repo_name'], b['branch_name']) 
                           for b in current_state}
     
@@ -121,20 +116,11 @@ def compare_states(current_state, previous_state, github_client):
             update_key = (current_branch["branch_name"], 
                          previous_branch["commit_hash"]) 
 
-            # Debug: Print before processing update
-            print(f"\nProcessing branch: {current_branch['branch_name']}")
-            print(f"Update key: {update_key}")
-            print(f"Already processed updates: {processed_updates}")
-
-
             if update_key not in processed_updates:
                 comparison = repo.compare(previous_branch["commit_hash"], 
                                         current_branch["commit_hash"])
                 if comparison.commits:
                     if is_rebased(comparison):
-                        # Debug: Print rebase detection
-                        print(f"Detected rebase for {current_branch['branch_name']}")
-                        print(f"Commits: {[c['name'] for c in convert_commits(comparison.commits)]}")
 
                         rebased_branches.append({
                             "repo_owner": current_branch["repo_owner"],
@@ -162,9 +148,6 @@ def compare_states(current_state, previous_state, github_client):
             deleted_branches.append(previous_branch)
             processed_deletions.add(deletion_key)
 
-    # Debug: Print final results
-    print("\nFinal processed updates:", processed_updates)
-    print("Number of rebased branches:", len(rebased_branches))
     for rb in rebased_branches:
         print(f"Rebased branch: {rb['branch_name']} with {len(rb['commits'])} commits")
 
