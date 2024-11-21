@@ -304,9 +304,9 @@ def branch_movements(db_dir, git_access_token, main_repo_name, forks):
 
     merged_commits_without_pr_sha = [commit["sha"] for commit in merged_without_pr]
     rebased_branches_result = [
-        cur for cur in rebased_branches
-        for commit in cur["commits"]
-        if commit["sha"] not in merged_commits_without_pr_sha
+        branch for branch in rebased_branches 
+        if any(commit["sha"] not in merged_commits_without_pr_sha 
+            for commit in branch["commits"])
     ]
     report = generate_report(new_branches, updated_branches, deleted_branches, rebased_branches_result)
 
