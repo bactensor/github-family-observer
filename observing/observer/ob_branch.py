@@ -152,13 +152,17 @@ def find_merged_commits_without_pr(main_repo_name, current_state, previous_state
     pulls = repo.get_pulls(state="closed", base=main_branch_name)
 
     pr_commit_shas = set()
+    pr_merge_commits = set()
+
     for pr in pulls:
         pr_commits = pr.get_commits()
         pr_commit_shas.update(commit.sha for commit in pr_commits)
+        if pr.merge_commit_sha:
+            pr_merge_commits.add(pr.merge_commit_sha)
 
     for commit in new_commits:
         commit_sha = commit.get("sha")
-        if commit_sha and commit_sha not in pr_commit_shas:
+        if commit_sha and commit_sha not in pr_commit_shas and commit_sha not in pr_merge_commits:
             merged_without_pr.append(commit)
 
     return merged_without_pr
