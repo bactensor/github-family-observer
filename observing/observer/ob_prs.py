@@ -1,4 +1,3 @@
-
 # This script generates a report on pull request activities in a GitHub repository.
 # It identifies open, merged, and closed-without-merging pull requests and formats a report for each category.
 #
@@ -27,6 +26,42 @@ def fetch_pr_details(repo, pr_number):
 
 def format_report_prs(merged_prs, unmerged_prs, open_prs, reopened_prs, repo):
     fields = []
+
+    if open_prs:
+        open_field = {
+            "name": "\n\n🌟 **Opened Pull Requests** 🌟\n\n",
+            "value": "",
+            "inline": False
+        }
+        for pr_number in open_prs:
+            pr_details = fetch_pr_details(repo, pr_number)
+            if pr_details:
+                open_field["value"] += f"\n- [{pr_details['title']}]({pr_details['url']}) by [{pr_details['author']}](https://github.com/{pr_details['author']})\n"
+                open_field["value"] += "  Commits:\n"
+                for i, commit in enumerate(pr_details["commits"]):
+                    if i:
+                        open_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
+                    else: 
+                        open_field["value"] += f" * [{commit['name']}]({commit['link']})"
+        fields.append(open_field)
+
+    if reopened_prs:
+        reopened_field = {
+            "name": "\n\n🚪 **Reopened Pull Requests** 🚪\n\n",
+            "value": "",
+            "inline": False
+        }
+        for pr_number in reopened_prs:
+            pr_details = fetch_pr_details(repo, pr_number)
+            if pr_details:
+                reopened_field["value"] += f"\n- [{pr_details['title']}]({pr_details['url']}) by [{pr_details['author']}](https://github.com/{pr_details['author']})\n"
+                reopened_field["value"] += "  Commits:\n"
+                for i, commit in enumerate(pr_details["commits"]):
+                    if i:
+                        reopened_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
+                    else: 
+                        reopened_field["value"] += f" * [{commit['name']}]({commit['link']})"
+        fields.append(reopened_field)
 
     if merged_prs:
         merged_field = {
@@ -63,42 +98,6 @@ def format_report_prs(merged_prs, unmerged_prs, open_prs, reopened_prs, repo):
                     else: 
                         unmerged_field["value"] += f" * [{commit['name']}]({commit['link']})"
         fields.append(unmerged_field)
-
-    if reopened_prs:
-        reopened_field = {
-            "name": "\n\n🚪 **Reopened Pull Requests** 🚪\n\n",
-            "value": "",
-            "inline": False
-        }
-        for pr_number in reopened_prs:
-            pr_details = fetch_pr_details(repo, pr_number)
-            if pr_details:
-                reopened_field["value"] += f"\n- [{pr_details['title']}]({pr_details['url']}) by [{pr_details['author']}](https://github.com/{pr_details['author']})\n"
-                reopened_field["value"] += "  Commits:\n"
-                for i, commit in enumerate(pr_details["commits"]):
-                    if i:
-                        reopened_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
-                    else: 
-                        reopened_field["value"] += f" * [{commit['name']}]({commit['link']})"
-        fields.append(reopened_field)
-    
-    if open_prs:
-        open_field = {
-            "name": "\n\n🌟 **Opened Pull Requests** 🌟\n\n",
-            "value": "",
-            "inline": False
-        }
-        for pr_number in open_prs:
-            pr_details = fetch_pr_details(repo, pr_number)
-            if pr_details:
-                open_field["value"] += f"\n- [{pr_details['title']}]({pr_details['url']}) by [{pr_details['author']}](https://github.com/{pr_details['author']})\n"
-                open_field["value"] += "  Commits:\n"
-                for i, commit in enumerate(pr_details["commits"]):
-                    if i:
-                        open_field["value"] += f"\n * [{commit['name']}]({commit['link']})"
-                    else: 
-                        open_field["value"] += f" * [{commit['name']}]({commit['link']})"
-        fields.append(open_field)
 
     embed = {
         "title": "🚀 PULL REQUEST REPORT 🚀",
